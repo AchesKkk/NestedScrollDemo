@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="NestedScrollLayout">
+        <attr name="header" format="reference" />
+        <attr name="scroll_child" format="reference" />
+    </declare-styleable>
+
+</resources>
