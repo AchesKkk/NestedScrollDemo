@@ -77,7 +77,7 @@ public class NestedScrollLayout extends ViewGroup {
     /**
      * Header滚动系数(可实现错位滚动).
      */
-    private float mHeaderScrollRatio = 0.5F;
+    private float mHeaderScrollRatio = 1.F;
 
 
     // constructors.
