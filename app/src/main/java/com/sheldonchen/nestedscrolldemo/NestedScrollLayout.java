@@ -287,7 +287,7 @@ public class NestedScrollLayout extends ViewGroup {
             if (y > mInitialDownY
                     || mScrollChildView.getTop() > getPaddingTop()) {
                 if (!mIsDragging) {
-                    mLastMotionY = mInitialDownY + mTouchSlop;
+                    mLastMotionY = y;
                     mIsDragging = true;
                 }
             }
