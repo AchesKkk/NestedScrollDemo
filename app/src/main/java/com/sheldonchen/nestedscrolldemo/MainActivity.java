@@ -1,19 +1,21 @@
 package com.sheldonchen.nestedscrolldemo;
 
+import android.graphics.Color;
 import android.support.annotation.NonNull;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+
+import com.sheldonchen.itemdecorations.decorations.LinearLayoutDivider;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,11 +24,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        TabLayout tabLayout = findViewById(R.id.tabs);
-        ViewPager viewPager = findViewById(R.id.viewpager);
-        viewPager.setAdapter(new InnerFragmentPagerAdapter(getSupportFragmentManager()));
-        tabLayout.setupWithViewPager(viewPager);
-        viewPager.setCurrentItem(0);
+//        TabLayout tabLayout = findViewById(R.id.tabs);
+//        ViewPager viewPager = findViewById(R.id.viewpager);
+//        viewPager.setAdapter(new InnerFragmentPagerAdapter(getSupportFragmentManager()));
+//        tabLayout.setupWithViewPager(viewPager);
+//        viewPager.setCurrentItem(0);
 
 //        RecyclerView recyclerView = findViewById(R.id.layout_scroll_child);
 //        recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -55,8 +57,22 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 
+        RecyclerView recyclerView = findViewById(R.id.rv);
+
         NestedScrollLayout nestedScrollLayout = findViewById(R.id.nested);
-        nestedScrollLayout.setOnChildScrollCallback(new NestedScrollLayout.ViewPagerFlingHelper(viewPager));
+        nestedScrollLayout.setOnChildScrollCallback(new NestedScrollLayout.SectionPinnedFlingHelper(recyclerView));
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setNestedScrollingEnabled(false);
+        recyclerView.addItemDecoration(new LinearLayoutDivider.Builder()
+                .drawFirstDivider(true)
+                .drawLastDivider(true)
+                .setDividerColor(Color.parseColor("#888888"))
+                .setStartPadding(15)
+                .setDividerThickness(1)
+                .build());
+        recyclerView.setAdapter(new InnerAdapter());
     }
 
     private static final class InnerFragmentPagerAdapter extends FragmentPagerAdapter {

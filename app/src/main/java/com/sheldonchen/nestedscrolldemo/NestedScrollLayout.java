@@ -570,6 +570,9 @@ public class NestedScrollLayout extends ViewGroup {
      * 辅助Fling的工具方法.
      */
     public static void helpScrollChildFling(View child, float velocity) {
+        if(child == null) {
+            return;
+        }
         if(child instanceof AbsListView) {
             AbsListView listView = (AbsListView) child;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -620,6 +623,35 @@ public class NestedScrollLayout extends ViewGroup {
         }
     }
 
+    /**
+     * 适配Section Pinned.
+     */
+    public static class SectionPinnedFlingHelper implements OnChildScrollCallback {
+        private View mTargetView;
+
+        public SectionPinnedFlingHelper(View targetView) {
+            mTargetView = targetView;
+        }
+
+        @Override
+        public boolean canChildScrollUp(NestedScrollLayout parent, View child) {
+            if(mTargetView == null) return false;
+
+            if (mTargetView instanceof ListView) {
+                return ListViewCompat.canScrollList((ListView) mTargetView, -1);
+            }
+            return mTargetView.canScrollVertically(-1);
+        }
+
+        @Override
+        public void dispatchFlingVelocity(NestedScrollLayout parent, View child, float velocity) {
+            helpScrollChildFling(mTargetView, velocity);
+        }
+    }
+
+    /**
+     * 适配ViewPager.
+     */
     public static class ViewPagerFlingHelper implements OnChildScrollCallback {
         private ViewPager mViewPager;
         private SparseArray<View> mScrollChildContainer;
