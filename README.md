@@ -7,7 +7,7 @@
 ## Image
 
 <div>
-  <img src="gif/Gif_20180617_235358.gif" width = "200" height = "350" hspace = "15"/>
+  <img src="gif/Gif_20180626_190143.gif" width = "200" height = "350" hspace = "15"/>
   <img src="gif/Gif_20180617_235435.gif" width = "200" height = "350" hspace = "15"/>
 </div>
 

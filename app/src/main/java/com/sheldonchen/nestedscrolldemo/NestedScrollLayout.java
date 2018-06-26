@@ -57,6 +57,7 @@ public class NestedScrollLayout extends ViewGroup {
 
     private OnChildScrollCallback mChildScrollCallback;
 
+    private boolean mFirstLayout = true;
     private boolean mHasAttrs;
 
     private static final int INVALID_POINTER = -1;
@@ -71,8 +72,6 @@ public class NestedScrollLayout extends ViewGroup {
 
     private VelocityTracker mVelocityTracker;
     private OverScroller mScroller;
-
-    private Rect mTempRect = new Rect();
 
     /**
      * Header滚动系数(可实现错位滚动).
@@ -114,6 +113,10 @@ public class NestedScrollLayout extends ViewGroup {
         }
 
         setChildrenDrawingOrderEnabled(true);
+
+        setFocusable(true);
+        setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
+        setWillNotDraw(false);
 
         final ViewConfiguration configuration = ViewConfiguration.get(context);
         mTouchSlop = configuration.getScaledTouchSlop() * 0.25F;
@@ -184,7 +187,8 @@ public class NestedScrollLayout extends ViewGroup {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         ensureTarget();
 
-        measureChild(mHeaderView, widthMeasureSpec, heightMeasureSpec);
+        final int headerMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+        measureChild(mHeaderView, widthMeasureSpec, headerMeasureSpec);
 
         final int scrollChildWidthMeasureSpec = MeasureSpec.makeMeasureSpec(
                 getMeasuredWidth() - getPaddingLeft() - getPaddingRight(), MeasureSpec.EXACTLY);
@@ -200,6 +204,8 @@ public class NestedScrollLayout extends ViewGroup {
         }
         ensureTarget();
 
+        final int oldScrollY = getCurrentScrollY();
+
         final int height = getMeasuredHeight();
         final int headerHeight = mHeaderView.getMeasuredHeight();
         final int headerWidth = mHeaderView.getMeasuredWidth();
@@ -214,6 +220,12 @@ public class NestedScrollLayout extends ViewGroup {
                 , paddingLeft + headerWidth, headerBottom);
         mScrollChildView.layout(paddingLeft, headerBottom
                 , paddingLeft + scrollChildWidth, headerHeight + height - getPaddingBottom());
+
+        if(mFirstLayout) {
+            mFirstLayout = false;
+        } else {
+            scrollTo(oldScrollY);
+        }
     }
 
     @Override
@@ -224,27 +236,26 @@ public class NestedScrollLayout extends ViewGroup {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
+        final int action = ev.getActionMasked();
+        int pointerIndex;
+        if(action == MotionEvent.ACTION_DOWN) {
+            resetScroller();
+            mActivePointerId = ev.getPointerId(0);
+            pointerIndex = ev.findPointerIndex(mActivePointerId);
+            if (pointerIndex < 0) {
+                return false;
+            }
+            mIsDragging = false;
+
+            mInitialDownX = ev.getX(pointerIndex);
+            mInitialDownY = ev.getY(pointerIndex);
+        }
+
         if (!isEnabled() || canChildScrollUp()/*子View还可以向上滚动, 将触摸事件向子View分发*/) {
             return false;
         }
 
-        final int action = ev.getActionMasked();
-        int pointerIndex;
-
         switch (action) {
-            case MotionEvent.ACTION_DOWN:
-                resetScroller();
-                mActivePointerId = ev.getPointerId(0);
-                pointerIndex = ev.findPointerIndex(mActivePointerId);
-                if (pointerIndex < 0) {
-                    return false;
-                }
-                mIsDragging = false;
-
-                mInitialDownX = ev.getX(pointerIndex);
-                mInitialDownY = ev.getY(pointerIndex);
-                break;
-
             case MotionEvent.ACTION_MOVE:
                 if (mActivePointerId == INVALID_POINTER) {
                     return false;
@@ -321,7 +332,7 @@ public class NestedScrollLayout extends ViewGroup {
                 mActivePointerId = ev.getPointerId(0);
                 mIsDragging = false;
 
-                if (touchInHeaderRect(ev)) {
+                if (consumeDownEventAccepted()) {
                     return true;
                 }
                 break;
@@ -395,19 +406,9 @@ public class NestedScrollLayout extends ViewGroup {
         return mIsDragging;
     }
 
-    private boolean touchInHeaderRect(MotionEvent event) {
-        if (mHeaderView.getGlobalVisibleRect(mTempRect)) {
-            final float rawX = event.getRawX();
-            final float rawY = event.getRawY();
-
-            if (mTempRect.contains((int) rawX, (int) rawY)) {
-                return true;
-            }
-        }
-
-        return false;
+    private boolean consumeDownEventAccepted() {
+        return getCurrentScrollY() < mHeaderView.getHeight();
     }
-
 
     /**
      * 滚动到指定位置.
@@ -440,12 +441,12 @@ public class NestedScrollLayout extends ViewGroup {
     }
 
     public int getCurrentScrollY() {
-        return mHeaderView.getMeasuredHeight() - mScrollChildView.getTop() + getPaddingTop();
+        return mHeaderView.getHeight() - mScrollChildView.getTop() + getPaddingTop();
     }
 
     private void moveChildrenTo(int scrollY) {
         final int paddingTop = getPaddingTop();
-        final int headerHeight = mHeaderView.getMeasuredHeight();
+        final int headerHeight = mHeaderView.getHeight();
         final int scrollChildTop = mScrollChildView.getTop();
         final int headerTop = mHeaderView.getTop();
 
@@ -495,7 +496,7 @@ public class NestedScrollLayout extends ViewGroup {
     }
 
     private void dispatchFlingIfNeed(int currentY) {
-        if(currentY >= mHeaderView.getMeasuredHeight()) {
+        if(currentY >= mHeaderView.getHeight()) {
             mScroller.abortAnimation();
 
             float velocityRemained;
@@ -563,7 +564,7 @@ public class NestedScrollLayout extends ViewGroup {
          */
         void dispatchFlingVelocity(NestedScrollLayout parent, View child, float velocity);
     }
-    
+
     // helper.
 
     /**
