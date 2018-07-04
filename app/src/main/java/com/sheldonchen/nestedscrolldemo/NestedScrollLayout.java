@@ -29,7 +29,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * 支持嵌套滚动的容器-NestedScrollLayout.
+ * 支持嵌套滚动的容器 ~ NestedScrollLayout.
  * note：
  *      需要指定相应的头部Header id以及嵌套滚动的子View id
  *      eg:
@@ -64,6 +64,10 @@ public class NestedScrollLayout extends ViewGroup {
     private int mActivePointerId;
 
     private boolean mIsDragging;
+    /**
+     * 标记是否模拟Down事件分发.
+     */
+    private boolean mMockDownEvent = false;
     private float mInitialDownX;
     private float mInitialDownY;
     private float mLastMotionY;
@@ -277,6 +281,10 @@ public class NestedScrollLayout extends ViewGroup {
             case MotionEvent.ACTION_CANCEL:
                 mIsDragging = false;
                 mActivePointerId = INVALID_POINTER;
+                if(mMockDownEvent) {
+                    mMockDownEvent = false;
+                    return true;
+                }
                 break;
         }
 
@@ -356,6 +364,7 @@ public class NestedScrollLayout extends ViewGroup {
                         if (mScrollChildView.getTop() <= getPaddingTop()) {
                             final int oldAction = ev.getAction();
                             ev.setAction(MotionEvent.ACTION_DOWN);
+                            mMockDownEvent = true;
                             dispatchTouchEvent(ev);
                             ev.setAction(oldAction);
                         }
